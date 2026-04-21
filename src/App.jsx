@@ -546,6 +546,9 @@ function App() {
             <p>Get your transparent PNG or apply a blur effect and save.</p>
           </div>
         </div>
+        <div className="more-to-come">
+          <span>More AI magic coming soon... ✦</span>
+        </div>
       </section>
 
       {/* ── Footer ── */}

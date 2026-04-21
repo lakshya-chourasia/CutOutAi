@@ -1438,6 +1438,36 @@ button:disabled {
   align-self: center;
 }
 
+.more-to-come {
+  margin-top: 4rem;
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.more-to-come span {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  border: 1px dashed var(--border);
+  border-radius: 99px;
+  background: var(--surface);
+  transition: all 0.4s ease;
+  cursor: default;
+}
+
+.more-to-come span:hover {
+  color: var(--purple-light);
+  border-style: solid;
+  border-color: rgba(139, 92, 246, 0.3);
+  background: var(--surface-2);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.08);
+  transform: translateY(-2px);
+}
+
+
 /* ═══════════════════════════════════════════════
    Footer
 ═══════════════════════════════════════════════ */
