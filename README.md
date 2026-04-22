@@ -2,25 +2,29 @@
 
 A high-fidelity, AI-powered background removal tool with a cyberpunk aesthetic. Built for speed, security, and visual excellence.
 
-## 🚀 One-Click Deploy to Vercel
+## ✨ Features
 
-1. **Push** this code to your GitHub repo.
-2. Link the repo to **Vercel**.
-3. Add a **Secret Environment Variable**:
-   - Key: `VITE_API_URL`
-   - Value: `YOUR_API_URL` (Check with owner)
-4. Deploy!
+- **Instant AI Removal**: Upload any photo and our AI strips the background in seconds.
+- **Portrait Blur**: Apply a beautiful, adjustable bokeh effect to your results.
+- **HD Downloads**: Save your cutouts as full-resolution PNGs with transparency.
+- **Privacy First**: Your images are processed securely and never stored.
+- **No Watermarks**: Professional results, 100% free forever.
 
-## 🛡️ Security Features
-- **Logic Protection**: API endpoints are hidden from the client source code via environment variables.
-- **Copy Protection**: Runtime blocks for Right-Click, Inspect Element, and Text Selection.
-- **Proprietary License**: Legally restricted from cloning or redistribution.
+## 📖 How to Use
 
-## ✨ Premium Aesthetics
+1. **Upload your Image**: Drag and drop your photo or click the upload zone.
+2. **Process**: Our AI will automatically detect and remove the background.
+3. **Customize**: 
+   - Keep it **Transparent** for design work.
+   - Or switch to **Blur BG** mode and adjust the slider for a professional portrait look.
+4. **Download**: Click the download button to save your high-quality PNG.
+
+## 🎨 Premium Aesthetics
+
 - **Bento Card Layout**: Modern, grid-based feature presentation.
 - **Glassmorphism**: High-fidelity frosted glass UI elements.
-- **Cursor Spotlight**: Cursor-reactive ambient lightning.
-- **Staggered Animations**: Smooth entry and interaction keyframes.
+- **Cursor Spotlight**: Dynamic, cursor-reactive ambient lighting.
+- **Smooth Animations**: Staggered entry and interactive keyframes.
 
 ---
 Built with ♥ by [Lakshya Chourasia](https://www.linkedin.com/in/laakshyaa/)
