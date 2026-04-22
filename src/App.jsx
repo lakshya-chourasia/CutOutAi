@@ -208,34 +208,78 @@ function App() {
 
   const handleDownload = async () => {
     if (!resultImage) return;
-    if (mode === 'transparent') {
+
+    try {
+      // 1. If mode is transparent, simplified download
+      if (mode === 'transparent') {
+        let downloadUrl = resultImage;
+        
+        // If it's a remote URL, fetch it and create a local blob to ensure the 'download' attribute works
+        if (resultImage.startsWith('http')) {
+          const resp = await fetch(resultImage);
+          const blob = await resp.blob();
+          downloadUrl = URL.createObjectURL(blob);
+        }
+        
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `cutout_${Date.now()}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        return;
+      }
+
+      // 2. Blurred background mode using Canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (!ctx) return;
+
+      const [origImg, resultImg] = await Promise.all([
+        new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = imagePreview;
+        }),
+        new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = resultImage;
+        })
+      ]);
+
+      // Set canvas to original image dimensions for max quality
+      canvas.width = origImg.width;
+      canvas.height = origImg.height;
+
+      // Draw blurred background (Original image)
+      ctx.filter = `blur(${blurAmount * 2}px) saturate(1.1)`;
+      ctx.drawImage(origImg, 0, 0, canvas.width, canvas.height);
+      
+      // Add a subtle dark overlay to the background for better contrast
+      ctx.filter = 'none';
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw the cutout on top
+      ctx.drawImage(resultImg, 0, 0, canvas.width, canvas.height);
+
+      // Export
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
       const link = document.createElement('a');
-      link.href = resultImage;
-      link.download = 'cutout.png';
+      link.href = dataUrl;
+      link.download = `cutout_portrait_${Date.now()}.png`;
+      document.body.appendChild(link);
       link.click();
-      return;
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Download failed:', err);
+      setError('Failed to process download. Try right-clicking the result image instead.');
     }
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const origImg = new Image();
-    const resultImg = new Image();
-    origImg.crossOrigin = 'anonymous';
-    resultImg.crossOrigin = 'anonymous';
-    await Promise.all([
-      new Promise(r => { origImg.onload = r; origImg.src = imagePreview; }),
-      new Promise(r => { resultImg.onload = r; resultImg.src = resultImage; }),
-    ]);
-    canvas.width = origImg.width;
-    canvas.height = origImg.height;
-    ctx.filter = `blur(${blurAmount * 2}px)`;
-    ctx.drawImage(origImg, 0, 0);
-    ctx.filter = 'none';
-    ctx.drawImage(resultImg, 0, 0);
-    const dataUrl = canvas.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = 'portrait-blur.png';
-    link.click();
   };
 
   const reset = () => {
