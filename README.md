@@ -8,7 +8,7 @@ A high-fidelity, AI-powered background removal tool with a cyberpunk aesthetic. 
 2. Link the repo to **Vercel**.
 3. Add a **Secret Environment Variable**:
    - Key: `VITE_API_URL`
-   - Value: `YOUR_API_URL`
+   - Value: `YOUR_API_URL` (Check with owner)
 4. Deploy!
 
 ## 🛡️ Security Features
