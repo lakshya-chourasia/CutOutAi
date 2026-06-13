@@ -55,7 +55,23 @@ function FeatureCard({ icon, title, desc }) {
 }
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
+const PDF_CONVERSION_OPTIONS = [
+  { id: 'jpg-to-pdf', name: 'JPG to PDF', accept: 'image/jpeg,image/png', ext: '.jpg,.jpeg,.png', outputExt: '.pdf' },
+  { id: 'word-to-pdf', name: 'Word to PDF', accept: '.docx,.doc,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword', ext: '.docx,.doc', outputExt: '.pdf' },
+  { id: 'ppt-to-pdf', name: 'PowerPoint to PDF', accept: '.pptx,.ppt,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint', ext: '.pptx,.ppt', outputExt: '.pdf' },
+  { id: 'excel-to-pdf', name: 'Excel to PDF', accept: '.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel', ext: '.xlsx,.xls', outputExt: '.pdf' },
+  { id: 'html-to-pdf', name: 'HTML to PDF', accept: '.html,.htm,text/html', ext: '.html,.htm', outputExt: '.pdf' },
+  { id: 'pdf-to-jpg', name: 'PDF to JPG', accept: '.pdf,application/pdf', ext: '.pdf', outputExt: '.zip' },
+  { id: 'pdf-to-word', name: 'PDF to Word', accept: '.pdf,application/pdf', ext: '.pdf', outputExt: '.docx' },
+  { id: 'pdf-to-ppt', name: 'PDF to PowerPoint', accept: '.pdf,application/pdf', ext: '.pdf', outputExt: '.pptx' },
+  { id: 'pdf-to-excel', name: 'PDF to Excel', accept: '.pdf,application/pdf', ext: '.pdf', outputExt: '.xlsx' },
+  { id: 'pdf-to-pdfa', name: 'PDF to PDF/A', accept: '.pdf,application/pdf', ext: '.pdf', outputExt: '.pdf' }
+];
+
 function App() {
+  const [view, setView] = useState('home'); // home, pdf-tools
+
+
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [resultImage, setResultImage] = useState(null);
@@ -67,8 +83,105 @@ function App() {
   const [progress, setProgress] = useState(0);
   const [showPromo, setShowPromo] = useState(false);
 
+  // PDF tools states
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfProgress, setPdfProgress] = useState(0);
+  const [pdfIsProcessing, setPdfIsProcessing] = useState(false);
+  const [pdfResultUrl, setPdfResultUrl] = useState(null);
+  const [pdfResultName, setPdfResultName] = useState(null);
+  const [pdfError, setPdfError] = useState(null);
+  const [pdfConversionType, setPdfConversionType] = useState('jpg-to-pdf');
+  const [pdfDragging, setPdfDragging] = useState(false);
+
   const fileInputRef = useRef(null);
+  const pdfInputRef = useRef(null);
   const toolRef = useRef(null);
+
+  const currentPdfOption = PDF_CONVERSION_OPTIONS.find(o => o.id === pdfConversionType) || PDF_CONVERSION_OPTIONS[0];
+
+  const handlePdfFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPdfFile(file);
+      setPdfResultUrl(null);
+      setPdfResultName(null);
+      setPdfError(null);
+    }
+  };
+
+  const handlePdfDragOver = (e) => { e.preventDefault(); setPdfDragging(true); };
+  const handlePdfDragLeave = () => setPdfDragging(false);
+  const handlePdfDrop = (e) => {
+    e.preventDefault(); setPdfDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      setPdfFile(file);
+      setPdfResultUrl(null);
+      setPdfResultName(null);
+      setPdfError(null);
+    }
+  };
+
+  const resetPdf = () => {
+    setPdfFile(null);
+    setPdfProgress(0);
+    setPdfIsProcessing(false);
+    setPdfResultUrl(null);
+    setPdfResultName(null);
+    setPdfError(null);
+  };
+
+  const convertPdf = async () => {
+    if (!pdfFile) return;
+    setPdfIsProcessing(true);
+    setPdfError(null);
+    setPdfProgress(0);
+
+    const progressInterval = setInterval(() => {
+      setPdfProgress(p => p < 90 ? p + Math.random() * 10 : p);
+    }, 450);
+
+    try {
+      const baseUrl = import.meta.env.VITE_PDF_API_URL || 'https://laakshaa-pdftools.hf.space';
+      const apiUrl = `${baseUrl}/${pdfConversionType}`;
+
+      const formData = new FormData();
+      formData.append('file', pdfFile);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`API Error (${response.status}): ${errText}`);
+      }
+
+      const blob = await response.blob();
+      const resultName = pdfFile.name.substring(0, pdfFile.name.lastIndexOf('.')) + currentPdfOption.outputExt;
+      setPdfResultUrl(URL.createObjectURL(blob));
+      setPdfResultName(resultName);
+      setPdfProgress(100);
+    } catch (err) {
+      console.error(err);
+      setPdfError(err.message || 'Failed to convert file. Please check file format and try again.');
+    } finally {
+      clearInterval(progressInterval);
+      setPdfIsProcessing(false);
+    }
+  };
+
+  const downloadPdfResult = () => {
+    if (!pdfResultUrl) return;
+    const link = document.createElement('a');
+    link.href = pdfResultUrl;
+    link.download = pdfResultName || `converted_file${currentPdfOption.outputExt}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
 
   const [scrolled, setScrolled] = useState(false);
 
@@ -296,14 +409,25 @@ function App() {
       {/* ── Navbar ── */}
       <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
         <div className="navbar-inner">
-          <a href="#" className="nav-logo">
+          <a href="#" className="nav-logo" onClick={(e) => { e.preventDefault(); setView('home'); }}>
             <span className="logo-icon">✦</span>
             <span>CutOut<strong>AI</strong></span>
           </a>
           <div className="nav-links">
-            <a href="#features">Features</a>
-            <a href="#tool">Try It</a>
-            <a href="#how">How It Works</a>
+            <a
+              href="#"
+              className={view === 'home' ? 'active-nav-link' : ''}
+              onClick={(e) => { e.preventDefault(); setView('home'); }}
+            >
+              Bg Remover
+            </a>
+            <a
+              href="#"
+              className={view === 'pdf-tools' ? 'active-nav-link' : ''}
+              onClick={(e) => { e.preventDefault(); setView('pdf-tools'); }}
+            >
+              PDF Tools
+            </a>
             <a
               href="https://www.linkedin.com/in/laakshyaa/"
               target="_blank"
@@ -321,279 +445,513 @@ function App() {
         </div>
       </nav>
 
-      {/* ── Hero ── */}
-      <section className="hero">
-        <div className="hero-badge">✦ AI-Powered · Free Forever</div>
-        <h1 className="hero-title">
-          Remove Backgrounds<br />
-          <span className="gradient-text">Instantly with AI</span>
-        </h1>
-        <p className="hero-subtitle">
-          Upload any photo and our AI strips the background in seconds — no skills needed,
-          no watermarks, 100% free.
-        </p>
-        <div className="hero-actions">
-          <button className="btn-hero-primary" onClick={scrollToTool}>
-            <IconWand /> Remove Background Free
-          </button>
-          <button className="btn-hero-outline" onClick={scrollToTool}>See How It Works</button>
-        </div>
-        <div className="hero-stats">
-          <div className="stat"><strong>10K+</strong><span>Images Processed</span></div>
-          <div className="stat-divider" />
-          <div className="stat"><strong>&lt;5s</strong><span>Average Speed</span></div>
-          <div className="stat-divider" />
-          <div className="stat"><strong>Free</strong><span>No Sign-up</span></div>
-        </div>
-      </section>
-
-      {/* ── Features ── */}
-      <section className="features-section" id="features">
-        <div className="section-label">Why CutOut AI?</div>
-        <h2 className="section-title">Everything you need, nothing you don't</h2>
-        <div className="features-grid">
-          <FeatureCard icon={<IconLightning />} title="Lightning Fast" desc="Our AI model removes backgrounds in under 5 seconds, even on complex photos with hair or fur." />
-          <FeatureCard icon={<IconBlur />} title="Background Blur" desc="Don't want transparent? Apply a beautiful portrait-style blur to your photo background instantly." />
-          <FeatureCard icon={<IconShield />} title="Privacy First" desc="Your images are processed securely and never stored. What you upload stays yours, always." />
-          <FeatureCard icon={<IconDownload />} title="HD Downloads" desc="Download your cutout as a full-resolution PNG with transparency, ready for any design tool." />
-          <FeatureCard icon={<IconFree />} title="100% Free" desc="No subscriptions, no hidden fees, no watermarks. Powered by open-source AI on Hugging Face." />
-          <FeatureCard icon={<IconUpload />} title="Any Format" desc="Supports JPG, PNG, WebP and more. Works perfectly on portraits, products, logos & objects." />
-        </div>
-      </section>
-
-      {/* ── Why Better ── */}
-      <section className="why-section">
-        <div className="why-inner">
-          <div className="why-header">
-            <div className="section-label">The CutOut AI Difference</div>
-            <h2 className="section-title">Why we're better than the rest</h2>
-            <p className="section-subtitle">Most background removers charge you, watermark your images, or make you sign up. We don't.</p>
-          </div>
-
-          <div className="compare-table">
-            <div className="compare-col compare-col--them">
-              <div className="compare-col-header">
-                <span className="compare-tag compare-tag--bad">❌ Others</span>
-              </div>
-              <ul className="compare-list">
-                <li><span className="x-icon">✕</span> Forced sign-up before use</li>
-                <li><span className="x-icon">✕</span> Watermarks on free tier</li>
-                <li><span className="x-icon">✕</span> Download limits per day</li>
-                <li><span className="x-icon">✕</span> Low-res output on free plan</li>
-                <li><span className="x-icon">✕</span> No background blur option</li>
-                <li><span className="x-icon">✕</span> Slow, overloaded servers</li>
-              </ul>
+      {view === 'home' ? (
+        <>
+          {/* ── Hero ── */}
+          <section className="hero">
+            <div className="hero-badge">✦ AI-Powered · Free Forever</div>
+            <h1 className="hero-title">
+              Remove Backgrounds<br />
+              <span className="gradient-text">Instantly with AI</span>
+            </h1>
+            <p className="hero-subtitle">
+              Upload any photo and our AI strips the background in seconds — no skills needed,
+              no watermarks, 100% free.
+            </p>
+            <div className="hero-actions">
+              <button className="btn-hero-primary" onClick={scrollToTool}>
+                <IconWand /> Remove Background Free
+              </button>
+              <button className="btn-hero-outline" onClick={scrollToTool}>See How It Works</button>
             </div>
-
-            <div className="compare-col compare-col--us">
-              <div className="compare-col-header">
-                <span className="compare-tag compare-tag--good">✦ CutOut AI</span>
-              </div>
-              <ul className="compare-list">
-                <li><span className="check-icon">✓</span> No sign-up, use instantly</li>
-                <li><span className="check-icon">✓</span> Zero watermarks, ever</li>
-                <li><span className="check-icon">✓</span> Unlimited free removals</li>
-                <li><span className="check-icon">✓</span> Full HD PNG output</li>
-                <li><span className="check-icon">✓</span> Portrait blur built-in</li>
-                <li><span className="check-icon">✓</span> Results in under 5 seconds</li>
-              </ul>
+            <div className="hero-stats">
+              <div className="stat"><strong>10K+</strong><span>Images Processed</span></div>
+              <div className="stat-divider" />
+              <div className="stat"><strong>&lt;5s</strong><span>Average Speed</span></div>
+              <div className="stat-divider" />
+              <div className="stat"><strong>Free</strong><span>No Sign-up</span></div>
             </div>
-          </div>
-        </div>
-      </section>
+          </section>
 
-      {/* ── Tool ── */}
-      <section className="tool-section" id="tool" ref={toolRef}>
-        <div className="section-label">The Tool</div>
-        <h2 className="section-title">Remove a background right now</h2>
-
-
-        <div className="tool-card">
-          {!imagePreview ? (
-            /* Upload Zone */
-            <div
-              id="upload-zone"
-              className={`upload-zone ${isDragging ? 'dragging' : ''}`}
-              onClick={() => fileInputRef.current?.click()}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <input type="file" hidden ref={fileInputRef} onChange={handleFileChange} accept="image/*" />
-              <div className="upload-icon-wrap">
-                <IconUpload />
-              </div>
-              <h3>Drop your image here</h3>
-              <p>or <span className="link-like">click to browse files</span></p>
-              <div className="upload-formats">
-                <span>JPG</span><span>PNG</span><span>WebP</span><span>HEIC</span>
-              </div>
+          {/* ── Features ── */}
+          <section className="features-section" id="features">
+            <div className="section-label">Why CutOut AI?</div>
+            <h2 className="section-title">Everything you need, nothing you don't</h2>
+            <div className="features-grid">
+              <FeatureCard icon={<IconLightning />} title="Lightning Fast" desc="Our AI model removes backgrounds in under 5 seconds, even on complex photos with hair or fur." />
+              <FeatureCard icon={<IconBlur />} title="Background Blur" desc="Don't want transparent? Apply a beautiful portrait-style blur to your photo background instantly." />
+              <FeatureCard icon={<IconShield />} title="Privacy First" desc="Your images are processed securely and never stored. What you upload stays yours, always." />
+              <FeatureCard icon={<IconDownload />} title="HD Downloads" desc="Download your cutout as a full-resolution PNG with transparency, ready for any design tool." />
+              <FeatureCard icon={<IconFree />} title="100% Free" desc="No subscriptions, no hidden fees, no watermarks. Powered by open-source AI on Hugging Face." />
+              <FeatureCard icon={<IconUpload />} title="Any Format" desc="Supports JPG, PNG, WebP and more. Works perfectly on portraits, products, logos & objects." />
             </div>
-          ) : (
-            /* Editor */
-            <div className="editor">
-              {/* Top bar */}
-              <div className="editor-topbar">
-                <div className="file-info">
-                  <div className="file-thumb">
-                    <img src={imagePreview} alt="thumb" />
-                  </div>
-                  <div>
-                    <p className="file-name">{imageFile?.name}</p>
-                    <p className="file-size">{imageFile ? (imageFile.size / 1024).toFixed(0) + ' KB' : ''}</p>
-                  </div>
-                </div>
-                <button className="icon-btn" onClick={reset} title="Remove image"><IconClose /></button>
+          </section>
+
+          {/* ── Why Better ── */}
+          <section className="why-section">
+            <div className="why-inner">
+              <div className="why-header">
+                <div className="section-label">The CutOut AI Difference</div>
+                <h2 className="section-title">Why we're better than the rest</h2>
+                <p className="section-subtitle">Most background removers charge you, watermark your images, or make you sign up. We don't.</p>
               </div>
 
-              {/* Image panels */}
-              <div className="panels">
-                <div className="panel">
-                  <div className="panel-label">Original</div>
-                  <div className="panel-img-wrap">
-                    <img src={imagePreview} alt="Original" />
+              <div className="compare-table">
+                <div className="compare-col compare-col--them">
+                  <div className="compare-col-header">
+                    <span className="compare-tag compare-tag--bad">❌ Others</span>
                   </div>
+                  <ul className="compare-list">
+                    <li><span className="x-icon">✕</span> Forced sign-up before use</li>
+                    <li><span className="x-icon">✕</span> Watermarks on free tier</li>
+                    <li><span className="x-icon">✕</span> Download limits per day</li>
+                    <li><span className="x-icon">✕</span> Low-res output on free plan</li>
+                    <li><span className="x-icon">✕</span> No background blur option</li>
+                    <li><span className="x-icon">✕</span> Slow, overloaded servers</li>
+                  </ul>
                 </div>
 
-                <div className="panel">
-                  <div className="panel-label">Result</div>
-                  <div className={`panel-img-wrap result-wrap ${!resultImage ? 'empty' : ''}`}>
-                    {!resultImage && !isProcessing && (
-                      <div className="result-placeholder">
-                        <IconWand />
-                        <p>Hit "Remove Background" to see magic</p>
+                <div className="compare-col compare-col--us">
+                  <div className="compare-col-header">
+                    <span className="compare-tag compare-tag--good">✦ CutOut AI</span>
+                  </div>
+                  <ul className="compare-list">
+                    <li><span className="check-icon">✓</span> No sign-up, use instantly</li>
+                    <li><span className="check-icon">✓</span> Zero watermarks, ever</li>
+                    <li><span className="check-icon">✓</span> Unlimited free removals</li>
+                    <li><span className="check-icon">✓</span> Full HD PNG output</li>
+                    <li><span className="check-icon">✓</span> Portrait blur built-in</li>
+                    <li><span className="check-icon">✓</span> Results in under 5 seconds</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ── Tool ── */}
+          <section className="tool-section" id="tool" ref={toolRef}>
+            <div className="section-label">The Tool</div>
+            <h2 className="section-title">Remove a background right now</h2>
+
+            <div className="tool-card">
+              {!imagePreview ? (
+                /* Upload Zone */
+                <div
+                  id="upload-zone"
+                  className={`upload-zone ${isDragging ? 'dragging' : ''}`}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  <input type="file" hidden ref={fileInputRef} onChange={handleFileChange} accept="image/*" />
+                  <div className="upload-icon-wrap">
+                    <IconUpload />
+                  </div>
+                  <h3>Drop your image here</h3>
+                  <p>or <span className="link-like">click to browse files</span></p>
+                  <div className="upload-formats">
+                    <span>JPG</span><span>PNG</span><span>WebP</span><span>HEIC</span>
+                  </div>
+                </div>
+              ) : (
+                /* Editor */
+                <div className="editor">
+                  {/* Top bar */}
+                  <div className="editor-topbar">
+                    <div className="file-info">
+                      <div className="file-thumb">
+                        <img src={imagePreview} alt="thumb" />
                       </div>
-                    )}
-                    {isProcessing && (
-                      <div className="processing-overlay">
-                        <div className="processing-ring" />
-                        <p>Removing background…</p>
-                        <div className="progress-track">
-                          <div className="progress-fill" style={{ width: `${progress}%` }} />
-                        </div>
-                        <span className="progress-pct">{Math.round(progress)}%</span>
+                      <div>
+                        <p className="file-name">{imageFile?.name}</p>
+                        <p className="file-size">{imageFile ? (imageFile.size / 1024).toFixed(0) + ' KB' : ''}</p>
                       </div>
-                    )}
-                    {resultImage && (
-                      <>
-                        <div className="result-container">
-                          {mode === 'blur' && (
-                            <img
-                              src={imagePreview}
-                              alt="Blurred bg"
-                              className="bg-layer"
-                              style={{ filter: `blur(${blurAmount}px) saturate(1.2)` }}
-                            />
+                    </div>
+                    <button className="icon-btn" onClick={reset} title="Remove image"><IconClose /></button>
+                  </div>
+
+                  {/* Image panels */}
+                  <div className="panels">
+                    <div className="panel">
+                      <div className="panel-label">Original</div>
+                      <div className="panel-img-wrap">
+                        <img src={imagePreview} alt="Original" />
+                      </div>
+                    </div>
+
+                    <div className="panel">
+                      <div className="panel-label">Result</div>
+                      <div className={`panel-img-wrap result-wrap ${!resultImage ? 'empty' : ''}`}>
+                        {!resultImage && !isProcessing && (
+                          <div className="result-placeholder">
+                            <IconWand />
+                            <p>Hit "Remove Background" to see magic</p>
+                          </div>
+                        )}
+                        {isProcessing && (
+                          <div className="processing-overlay">
+                            <div className="processing-ring" />
+                            <p>Removing background…</p>
+                            <div className="progress-track">
+                              <div className="progress-fill" style={{ width: `${progress}%` }} />
+                            </div>
+                            <span className="progress-pct">{Math.round(progress)}%</span>
+                          </div>
+                        )}
+                        {resultImage && (
+                          <>
+                            <div className="result-container">
+                              {mode === 'blur' && (
+                                <img
+                                  src={imagePreview}
+                                  alt="Blurred bg"
+                                  className="bg-layer"
+                                  style={{ filter: `blur(${blurAmount}px) saturate(1.2)` }}
+                                />
+                              )}
+                              <img
+                                src={resultImage}
+                                alt="Result"
+                                className={`fg-layer ${mode === 'transparent' ? 'checkerboard-bg' : ''}`}
+                              />
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Controls */}
+                  <div className="controls-bar">
+                    {!resultImage ? (
+                      <div className="controls-actions">
+                        <button className="btn-secondary" onClick={reset} disabled={isProcessing}>
+                          Cancel
+                        </button>
+                        <button className="btn-primary" onClick={removeBackground} disabled={isProcessing}>
+                          {isProcessing ? (
+                            <>
+                              <span className="dot-pulse" />
+                              Processing…
+                            </>
+                          ) : (
+                            <><IconWand /> Remove Background</>
                           )}
-                          <img
-                            src={resultImage}
-                            alt="Result"
-                            className={`fg-layer ${mode === 'transparent' ? 'checkerboard-bg' : ''}`}
-                          />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="result-controls">
+                        <div className="mode-switcher">
+                          <button
+                            className={`mode-btn ${mode === 'transparent' ? 'active' : ''}`}
+                            onClick={() => setMode('transparent')}
+                          >
+                            Transparent
+                          </button>
+                          <button
+                            className={`mode-btn ${mode === 'blur' ? 'active' : ''}`}
+                            onClick={() => setMode('blur')}
+                          >
+                            <IconBlur /> Blur BG
+                          </button>
                         </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
 
-              {/* Controls */}
-              <div className="controls-bar">
-                {!resultImage ? (
-                  <div className="controls-actions">
-                    <button className="btn-secondary" onClick={reset} disabled={isProcessing}>
-                      Cancel
-                    </button>
-                    <button className="btn-primary" onClick={removeBackground} disabled={isProcessing}>
-                      {isProcessing ? (
-                        <>
-                          <span className="dot-pulse" />
-                          Processing…
-                        </>
-                      ) : (
-                        <><IconWand /> Remove Background</>
-                      )}
-                    </button>
-                  </div>
-                ) : (
-                  <div className="result-controls">
-                    <div className="mode-switcher">
-                      <button
-                        className={`mode-btn ${mode === 'transparent' ? 'active' : ''}`}
-                        onClick={() => setMode('transparent')}
-                      >
-                        Transparent
-                      </button>
-                      <button
-                        className={`mode-btn ${mode === 'blur' ? 'active' : ''}`}
-                        onClick={() => setMode('blur')}
-                      >
-                        <IconBlur /> Blur BG
-                      </button>
-                    </div>
+                        {mode === 'blur' && (
+                          <div className="blur-control">
+                            <label>Blur: <strong>{blurAmount}</strong></label>
+                            <input
+                              type="range"
+                              min="1"
+                              max="20"
+                              value={blurAmount}
+                              onChange={e => setBlurAmount(Number(e.target.value))}
+                              className="slider"
+                            />
+                          </div>
+                        )}
 
-                    {mode === 'blur' && (
-                      <div className="blur-control">
-                        <label>Blur: <strong>{blurAmount}</strong></label>
-                        <input
-                          type="range"
-                          min="1"
-                          max="20"
-                          value={blurAmount}
-                          onChange={e => setBlurAmount(Number(e.target.value))}
-                          className="slider"
-                        />
+                        <div className="result-actions">
+                          <button className="btn-secondary" onClick={reset}>New Image</button>
+                          <button className="btn-download" onClick={handleDownload}>
+                            <IconDownload /> Download PNG
+                          </button>
+                        </div>
                       </div>
                     )}
-
-                    <div className="result-actions">
-                      <button className="btn-secondary" onClick={reset}>New Image</button>
-                      <button className="btn-download" onClick={handleDownload}>
-                        <IconDownload /> Download PNG
-                      </button>
-                    </div>
                   </div>
-                )}
-              </div>
 
-              {error && (
-                <div className="error-banner">
-                  <strong>Error:</strong> {error}
-                  <button className="err-close" onClick={() => setError(null)}><IconClose /></button>
+                  {error && (
+                    <div className="error-banner">
+                      <strong>Error:</strong> {error}
+                      <button className="err-close" onClick={() => setError(null)}><IconClose /></button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
-      </section>
+          </section>
 
-      {/* ── How It Works ── */}
-      <section className="how-section" id="how">
-        <div className="section-label">How It Works</div>
-        <h2 className="section-title">Three steps, zero friction</h2>
-        <div className="steps">
-          <div className="step">
-            <div className="step-num">01</div>
-            <h4>Upload</h4>
-            <p>Drag & drop or click to select any image from your device.</p>
-          </div>
-          <div className="step-arrow">→</div>
-          <div className="step">
-            <div className="step-num">02</div>
-            <h4>Process</h4>
-            <p>Our AI model instantly detects and removes the background.</p>
-          </div>
-          <div className="step-arrow">→</div>
-          <div className="step">
-            <div className="step-num">03</div>
-            <h4>Download</h4>
-            <p>Get your transparent PNG or apply a blur effect and save.</p>
-          </div>
-        </div>
-        <div className="more-to-come">
-          <span>More AI magic coming soon... ✦</span>
-        </div>
-      </section>
+          {/* ── How It Works ── */}
+          <section className="how-section" id="how">
+            <div className="section-label">How It Works</div>
+            <h2 className="section-title">Three steps, zero friction</h2>
+            <div className="steps">
+              <div className="step">
+                <div className="step-num">01</div>
+                <h4>Upload</h4>
+                <p>Drag & drop or click to select any image from your device.</p>
+              </div>
+              <div className="step-arrow">→</div>
+              <div className="step">
+                <div className="step-num">02</div>
+                <h4>Process</h4>
+                <p>Our AI model instantly detects and removes the background.</p>
+              </div>
+              <div className="step-arrow">→</div>
+              <div className="step">
+                <div className="step-num">03</div>
+                <h4>Download</h4>
+                <p>Get your transparent PNG or apply a blur effect and save.</p>
+              </div>
+            </div>
+            <div className="more-to-come">
+              <span>More AI magic coming soon... ✦</span>
+            </div>
+          </section>
+        </>
+      ) : (
+        <>
+          {/* ── PDF TOOLS PAGE ── */}
+          <section className="hero">
+            <div className="hero-badge">✦ Professional · Infinite Actions</div>
+            <h1 className="hero-title">
+              Convert PDFs & Documents<br />
+              <span className="gradient-text">Instantly with AI</span>
+            </h1>
+            <p className="hero-subtitle">
+              Convert between Word, Excel, PowerPoint, HTML, Images, and PDFs in seconds. 100% free with layouts preserved.
+            </p>
+            <div className="hero-actions">
+              <button className="btn-hero-primary" onClick={scrollToTool}>
+                Start Conversion Suite
+              </button>
+            </div>
+            <div className="hero-stats">
+              <div className="stat"><strong>10+</strong><span>Conversion Methods</span></div>
+              <div className="stat-divider" />
+              <div className="stat"><strong>Secure</strong><span>Processed in memory</span></div>
+              <div className="stat-divider" />
+              <div className="stat"><strong>Free</strong><span>No limitations</span></div>
+            </div>
+          </section>
+
+          {/* ── Tool Workspace ── */}
+          <section className="tool-section" id="tool" ref={toolRef}>
+            <div className="section-label">Workspace</div>
+            <h2 className="section-title">Document Converter</h2>
+
+            <div className="tool-card">
+              <div className="pdf-converter-tab-content">
+                {/* Conversion selector dropdown */}
+                <div className="pdf-option-bar">
+                  <label htmlFor="pdf-tool-select" className="pdf-option-label">Choose Action:</label>
+                  <div className="select-wrap">
+                    <select
+                      id="pdf-tool-select"
+                      value={pdfConversionType}
+                      onChange={(e) => {
+                        setPdfConversionType(e.target.value);
+                        resetPdf();
+                      }}
+                      className="pdf-select"
+                    >
+                      {PDF_CONVERSION_OPTIONS.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {!pdfFile ? (
+                  /* Upload Zone */
+                  <div
+                    id="pdf-upload-zone"
+                    className={`upload-zone pdf-upload-zone ${pdfDragging ? 'dragging' : ''}`}
+                    onClick={() => pdfInputRef.current?.click()}
+                    onDragOver={handlePdfDragOver}
+                    onDragLeave={handlePdfDragLeave}
+                    onDrop={handlePdfDrop}
+                  >
+                    <input
+                      type="file"
+                      hidden
+                      ref={pdfInputRef}
+                      onChange={handlePdfFileChange}
+                      accept={currentPdfOption.accept}
+                    />
+                    <div className="upload-icon-wrap pdf-icon-wrap">
+                      <IconUpload />
+                    </div>
+                    <h3>Drop your file here</h3>
+                    <p>or <span className="link-like">click to browse files</span></p>
+                    <div className="upload-formats">
+                      <span>Accepts: {currentPdfOption.ext.toUpperCase()}</span>
+                    </div>
+                  </div>
+                ) : (
+                  /* Editor/Converter */
+                  <div className="editor pdf-editor">
+                    {/* Top bar */}
+                    <div className="editor-topbar">
+                      <div className="file-info">
+                        <div className="file-thumb pdf-thumb">
+                          <span className="file-icon-badge">
+                            {currentPdfOption.id.startsWith('pdf-') ? '📄' : '📁'}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="file-name">{pdfFile.name}</p>
+                          <p className="file-size">{(pdfFile.size / 1024).toFixed(0)} KB</p>
+                        </div>
+                      </div>
+                      <button className="icon-btn" onClick={resetPdf} title="Remove file" disabled={pdfIsProcessing}><IconClose /></button>
+                    </div>
+
+                    {/* Panels */}
+                    <div className="panels">
+                      <div className="panel">
+                        <div className="panel-label">Source File</div>
+                        <div className="pdf-panel-content">
+                          <div className="pdf-file-details-card">
+                            <div className="pdf-card-row">
+                              <span className="pdf-card-key">Name:</span>
+                              <span className="pdf-card-val">{pdfFile.name}</span>
+                            </div>
+                            <div className="pdf-card-row">
+                              <span className="pdf-card-key">Type:</span>
+                              <span className="pdf-card-val">{pdfFile.type || 'Binary Document'}</span>
+                            </div>
+                            <div className="pdf-card-row">
+                              <span className="pdf-card-key">Size:</span>
+                              <span className="pdf-card-val">{(pdfFile.size / 1024).toFixed(0)} KB</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="panel">
+                        <div className="panel-label">Target Output</div>
+                        <div className={`pdf-panel-content result-wrap ${!pdfResultUrl ? 'empty' : ''}`}>
+                          {!pdfResultUrl && !pdfIsProcessing && (
+                            <div className="result-placeholder pdf-placeholder">
+                              <span className="wand-anim-wrap">⚡</span>
+                              <p>Hit "Convert File" to process into <strong>{currentPdfOption.outputExt.toUpperCase()}</strong></p>
+                            </div>
+                          )}
+                          {pdfIsProcessing && (
+                            <div className="processing-overlay">
+                              <div className="processing-ring pdf-ring" />
+                              <p>Converting file…</p>
+                              <div className="progress-track">
+                                <div className="progress-fill pdf-progress-fill" style={{ width: `${pdfProgress}%` }} />
+                              </div>
+                              <span className="progress-pct">{Math.round(pdfProgress)}%</span>
+                            </div>
+                          )}
+                          {pdfResultUrl && (
+                            <div className="pdf-success-card">
+                              <div className="success-check">✓</div>
+                              <h3>Conversion Complete</h3>
+                              <p className="success-filename">{pdfResultName}</p>
+                              <span className="success-badge">Ready for download</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="controls-bar">
+                      {!pdfResultUrl ? (
+                        <div className="controls-actions">
+                          <button className="btn-secondary" onClick={resetPdf} disabled={pdfIsProcessing}>
+                            Cancel
+                          </button>
+                          <button className="btn-primary pdf-btn-primary" onClick={convertPdf} disabled={pdfIsProcessing}>
+                            {pdfIsProcessing ? (
+                              <>
+                                <span className="dot-pulse" />
+                                Converting…
+                              </>
+                            ) : (
+                              <>Convert to {currentPdfOption.outputExt.toUpperCase()}</>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="result-controls pdf-result-controls">
+                          <div className="result-actions pdf-result-actions">
+                            <button className="btn-secondary" onClick={resetPdf}>New File</button>
+                            <button className="btn-download pdf-btn-download" onClick={downloadPdfResult}>
+                              <IconDownload /> Download {currentPdfOption.outputExt.toUpperCase()}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {pdfError && (
+                      <div className="error-banner">
+                        <strong>Error:</strong> {pdfError}
+                        <button className="err-close" onClick={() => setPdfError(null)}><IconClose /></button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* ── Features ── */}
+          <section className="features-section" id="pdf-features">
+            <div className="section-label">Why PDF Tools?</div>
+            <h2 className="section-title">Fully integrated conversions</h2>
+            <div className="features-grid">
+              <FeatureCard icon={<IconLightning />} title="Preserved Layout" desc="Keeps your document structures, images, columns, and styles fully preserved upon conversion." />
+              <FeatureCard icon={<IconShield />} title="Absolute Security" desc="All transformations happen in secure sandbox memories. We never cache or save your content." />
+              <FeatureCard icon={<IconFree />} title="100% Free Suite" desc="No pagination restrictions, size constraints, or subscriptions. Process as many documents as you need." />
+            </div>
+          </section>
+
+          {/* ── How it works ── */}
+          <section className="how-section" id="pdf-how">
+            <div className="section-label">Workflow</div>
+            <h2 className="section-title">As simple as 1-2-3</h2>
+            <div className="steps">
+              <div className="step">
+                <div className="step-num">01</div>
+                <h4>Configure</h4>
+                <p>Choose your input and output extensions from the select options menu.</p>
+              </div>
+              <div className="step-arrow">→</div>
+              <div className="step">
+                <div className="step-num">02</div>
+                <h4>Upload</h4>
+                <p>Drag and drop your file or search your device to upload it securely.</p>
+              </div>
+              <div className="step-arrow">→</div>
+              <div className="step">
+                <div className="step-num">03</div>
+                <h4>Download</h4>
+                <p>Allow the processor to convert and fetch your result file instantly.</p>
+              </div>
+            </div>
+          </section>
+        </>
+      )}
 
       {/* ── Footer ── */}
       <footer className="footer">

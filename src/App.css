@@ -300,12 +300,19 @@ body::after {
 }
 
 .nav-links a {
-  transition: color 0.2s;
+  transition: color 0.2s, text-shadow 0.2s;
 }
 
 .nav-links a:hover {
   color: var(--text);
 }
+
+.nav-links a.active-nav-link {
+  color: var(--purple-light);
+  font-weight: 700;
+  text-shadow: 0 0 8px var(--purple-glow);
+}
+
 
 .nav-cta {
   flex-shrink: 0;
@@ -1860,4 +1867,250 @@ button:disabled {
     left: 20px;
     width: auto;
   }
+}
+
+/* ═══════════════════════════════════════════════
+   PDF Converter & Tabs UI Styles
+   ═══════════════════════════════════════════════ */
+.tool-tabs-container {
+  display: flex;
+  gap: 10px;
+  margin: 0 clamp(1rem, 3vw, 2rem) 1rem clamp(1rem, 3vw, 2rem);
+  padding: 6px;
+  background: rgba(14, 14, 26, 0.6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  backdrop-filter: blur(10px);
+}
+
+.tool-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tool-tab-btn:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.tool-tab-btn.active {
+  color: #fff;
+  background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+  box-shadow: 
+    0 4px 15px rgba(139, 92, 246, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.tab-icon {
+  font-size: 1.1rem;
+}
+
+/* Option bar for choosing conversion actions */
+.pdf-option-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem clamp(1rem, 3vw, 2rem) 0.5rem;
+}
+
+.pdf-option-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+.select-wrap {
+  position: relative;
+  flex: 1;
+  max-width: 320px;
+}
+
+.select-wrap::after {
+  content: '▼';
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  position: absolute;
+  pointer-events: none;
+}
+
+.pdf-select {
+  width: 100%;
+  padding: 10px 40px 10px 16px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: all 0.25s;
+}
+
+.pdf-select:focus {
+  outline: none;
+  border-color: var(--purple-light);
+  box-shadow: 0 0 12px var(--purple-glow);
+}
+
+/* PDF Upload Zone Customization */
+.pdf-upload-zone {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.pdf-icon-wrap {
+  background: rgba(139, 92, 246, 0.08);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+/* Panel styling for PDF tools */
+.pdf-panel-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 220px;
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.pdf-file-details-card {
+  width: 100%;
+  max-width: 340px;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.pdf-card-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.pdf-card-row:last-child {
+  border-bottom: none;
+}
+
+.pdf-card-key {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.pdf-card-val {
+  color: var(--text);
+  font-weight: 600;
+  text-align: right;
+  word-break: break-all;
+}
+
+/* Result placeholder */
+.pdf-placeholder p {
+  margin-top: 12px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.wand-anim-wrap {
+  font-size: 2.2rem;
+  display: inline-block;
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Success Card */
+.pdf-success-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.success-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--green);
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 20px var(--green-glow);
+  animation: pulseRing 1.5s infinite;
+}
+
+.pdf-success-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  color: #fff;
+  margin-bottom: 6px;
+}
+
+.success-filename {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  max-width: 280px;
+  word-break: break-all;
+}
+
+.success-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--green);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  border-radius: 99px;
+}
+
+/* Simulated Progress */
+.pdf-progress-fill {
+  background: linear-gradient(90deg, var(--purple-light), var(--purple));
+  box-shadow: 0 0 10px var(--purple-glow);
+}
+
+.pdf-ring {
+  border-top-color: var(--purple-light);
+}
+
+/* File badge in preview thumbnail */
+.pdf-thumb {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-icon-badge {
+  font-size: 1.5rem;
 }
