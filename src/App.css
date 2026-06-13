@@ -2114,3 +2114,174 @@ button:disabled {
 .file-icon-badge {
   font-size: 1.5rem;
 }
+
+/* ═══════════════════════════════════════════════
+   Mobile Hamburger & Nav Drawer Styles
+   ═══════════════════════════════════════════════ */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 24px;
+  height: 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 300;
+  padding: 0;
+}
+
+.hamburger-btn .bar {
+  width: 100%;
+  height: 2px;
+  background-color: var(--text);
+  border-radius: 4px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Hamburger active transformation to 'X' */
+.hamburger-btn.active .bar:nth-child(1) {
+  transform: translateY(8px) rotate(45deg);
+}
+.hamburger-btn.active .bar:nth-child(2) {
+  opacity: 0;
+}
+.hamburger-btn.active .bar:nth-child(3) {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+.mobile-nav-drawer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background: rgba(7, 7, 16, 0.95);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  z-index: 150;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(100%);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mobile-nav-drawer.open {
+  transform: translateX(0);
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  width: 100%;
+  padding: 2rem;
+}
+
+.mobile-nav-links a {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  transition: all 0.3s;
+}
+
+.mobile-nav-links a:hover,
+.mobile-nav-links a.active-nav-link {
+  color: var(--purple-light);
+  text-shadow: 0 0 12px var(--purple-glow);
+}
+
+.mobile-nav-links .nav-link-li {
+  font-size: 1.3rem;
+}
+
+.mobile-nav-cta {
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 2.2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 1rem;
+  box-shadow: 0 4px 16px var(--purple-glow);
+  transition: all 0.3s;
+}
+
+.mobile-nav-cta:hover {
+  background: var(--purple-dark);
+  box-shadow: 0 6px 22px var(--purple-glow);
+}
+
+/* Media query updates for Mobile Nav */
+@media (max-width: 768px) {
+  .hamburger-btn {
+    display: flex;
+  }
+  .navbar-inner .nav-cta {
+    display: none; /* Hide top CTA inside nav block to avoid crowd */
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   PDF Converter Mobile Optimizations
+   ═══════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .pdf-option-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+    padding: 1rem 1rem 0.5rem;
+  }
+  
+  .pdf-option-label {
+    text-align: left;
+  }
+
+  .select-wrap {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .pdf-panel-content {
+    padding: 1rem;
+    min-height: 180px;
+  }
+
+  .pdf-file-details-card {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .pdf-success-card {
+    padding: 0.5rem;
+  }
+
+  .success-check {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .pdf-editor {
+    padding-bottom: 0.5rem;
+  }
+
+  .pdf-result-controls .pdf-result-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .pdf-result-actions .btn-secondary,
+  .pdf-result-actions .btn-download {
+    width: 100%;
+    justify-content: center;
+  }
+}

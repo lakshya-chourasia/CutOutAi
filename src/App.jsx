@@ -70,7 +70,7 @@ const PDF_CONVERSION_OPTIONS = [
 
 function App() {
   const [view, setView] = useState('home'); // home, pdf-tools
-
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -409,7 +409,7 @@ function App() {
       {/* ── Navbar ── */}
       <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
         <div className="navbar-inner">
-          <a href="#" className="nav-logo" onClick={(e) => { e.preventDefault(); setView('home'); }}>
+          <a href="#" className="nav-logo" onClick={(e) => { e.preventDefault(); setView('home'); setIsMobileMenuOpen(false); }}>
             <span className="logo-icon">✦</span>
             <span>CutOut<strong>AI</strong></span>
           </a>
@@ -438,12 +438,55 @@ function App() {
               LinkedIn
             </a>
           </div>
-          <button className="nav-cta" onClick={scrollToTool}>
+          <button className="nav-cta" onClick={() => { setIsMobileMenuOpen(false); scrollToTool(); }}>
             <span>Get Started</span>
             <svg className="nav-cta-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
           </button>
+          
+          <button 
+            className={`hamburger-btn ${isMobileMenuOpen ? 'active' : ''}`} 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Toggle Menu"
+          >
+            <span className="bar"></span>
+            <span className="bar"></span>
+            <span className="bar"></span>
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Navigation Drawer */}
+      <div className={`mobile-nav-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
+        <div className="mobile-nav-links">
+          <a
+            href="#"
+            className={view === 'home' ? 'active-nav-link' : ''}
+            onClick={(e) => { e.preventDefault(); setView('home'); setIsMobileMenuOpen(false); }}
+          >
+            ✦ Bg Remover
+          </a>
+          <a
+            href="#"
+            className={view === 'pdf-tools' ? 'active-nav-link' : ''}
+            onClick={(e) => { e.preventDefault(); setView('pdf-tools'); setIsMobileMenuOpen(false); }}
+          >
+            ✦ PDF Tools
+          </a>
+          <a
+            href="https://www.linkedin.com/in/laakshyaa/"
+            target="_blank"
+            rel="noreferrer"
+            className="nav-link-li"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" /></svg>
+            LinkedIn
+          </a>
+          <button className="mobile-nav-cta" onClick={() => { setIsMobileMenuOpen(false); scrollToTool(); }}>
+            Get Started
+          </button>
+        </div>
+      </div>
 
       {view === 'home' ? (
         <>
