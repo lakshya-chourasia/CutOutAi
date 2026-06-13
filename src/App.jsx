@@ -674,7 +674,7 @@ function App() {
                         <div className="result-actions">
                           <button className="btn-secondary" onClick={reset}>New Image</button>
                           <button className="btn-download" onClick={handleDownload}>
-                            <IconDownload /> Download PNG
+                            <IconDownload /> Download
                           </button>
                         </div>
                       </div>
@@ -896,7 +896,7 @@ function App() {
                           <div className="result-actions pdf-result-actions">
                             <button className="btn-secondary" onClick={resetPdf}>New File</button>
                             <button className="btn-download pdf-btn-download" onClick={downloadPdfResult}>
-                              <IconDownload /> Download {currentPdfOption.outputExt.toUpperCase()}
+                              <IconDownload /> Download
                             </button>
                           </div>
                         </div>
